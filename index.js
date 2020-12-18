@@ -3,7 +3,7 @@ const excelHandle = require('./generator')
 const dayjs = require('dayjs')
 var Crawler = require('crawler')
 
-let dayNum = 60
+let dayNum = 120
 let dates = []
 while (dayNum) {
   dates.push(
@@ -47,8 +47,14 @@ const crawlerIndex = new Crawler({
       t1: 0,
       is21t1: 0,
       t2: 0,
-      t3: 0
+      t3: 0,
       // 特定时间计算end
+      lt40gt45noScoreCount: 0, // 40分钟前没进球比赛
+      lt40gt45nextHalfGoal: 0, // 40分钟前没进球比赛下半场有球
+      lt40gt45Precent: 0, // 40分钟前没进球下半有球概率
+      oneScorelt40gt45: 0,
+      twoScorelt40gt45: 0,
+      threeScorelt40gt45: 0
     }
     for (var i = 0; i < detailUrl.length; ++i) {
       var url = detailUrl[i]
@@ -56,7 +62,9 @@ const crawlerIndex = new Crawler({
         if (!res) return
         data = {
           ...data,
-          prevHalfHit: (data.prevHalfHit += 1),
+          prevHalfHit: res.prevHalfHit
+            ? (data.prevHalfHit += 1)
+            : data.prevHalfHit,
           is21:
             res.halfScore === '1-2' || res.halfScore === '2-1'
               ? (data.is21 += 1)
@@ -64,6 +72,12 @@ const crawlerIndex = new Crawler({
           nextHalfGoal: res.nextHalfGoal
             ? (data.nextHalfGoal += 1)
             : data.nextHalfGoal,
+          lt40gt45noScoreCount: res.lt40gt45noScoreCount
+            ? (data.lt40gt45noScoreCount += 1)
+            : data.lt40gt45noScoreCount,
+          lt40gt45nextHalfGoal: res.lt40gt45nextHalfGoal
+            ? (data.lt40gt45nextHalfGoal += 1)
+            : data.lt40gt45nextHalfGoal,
           is21NextHalfGoal: res.is21NextHalfGoal
             ? (data.is21NextHalfGoal += 1)
             : data.is21NextHalfGoal,
@@ -71,29 +85,40 @@ const crawlerIndex = new Crawler({
           t1: res.t1 ? (data.t1 += 1) : data.t1,
           is21t1: res.is21t1 ? (data.is21t1 += 1) : data.is21t1,
           t2: res.t2 ? (data.t2 += 1) : data.t2,
-          t3: res.t3 ? (data.t3 += 1) : data.t3,
+          t3: res.t3 ? (data.t3 += 1) : data.t3
           // 特定时间计算end
         }
 
-        // 进球数统计
-        if(res.nextScoreCount === 0) {
-          
-        } else if(res.nextScoreCount === 1) {
-          data.oneScore++
-        } else if(res.nextScoreCount === 2) {
-          data.twoScore++
+        // 有绝杀时统计
+        if (res.prevHalfHit) {
+          // 进球数统计
+          if (res.nextScoreCount === 0) {
+          } else if (res.nextScoreCount === 1) {
+            data.oneScore++
+          } else if (res.nextScoreCount === 2) {
+            data.twoScore++
+          } else {
+            data.threeScore++
+          }
+          // 国际比分进球数统计
+          if (res.nextScoreCount21 === 0) {
+          } else if (res.nextScoreCount21 === 1) {
+            data.oneScore21++
+          } else if (res.nextScoreCount21 === 2) {
+            data.twoScore21++
+          } else {
+            data.threeScore21++
+          }
         } else {
-          data.threeScore++
-        }
-        // 国际比分进球数统计
-        if(res.nextScoreCount21 === 0) {
-          
-        } else if(res.nextScoreCount21 === 1) {
-          data.oneScore21++
-        } else if(res.nextScoreCount21 === 2) {
-          data.twoScore21++
-        } else {
-          data.threeScore21++
+          // 40分钟前无进球数下半场进球统计
+          if (res.nextScoreCountlt40gt45 === 0) {
+          } else if (res.nextScoreCountlt40gt45 === 1) {
+            data.oneScorelt40gt45++
+          } else if (res.nextScoreCountlt40gt45 === 2) {
+            data.twoScorelt40gt45++
+          } else {
+            data.threeScorelt40gt45++
+          }
         }
       })
       if (i === detailUrl.length - 1) {
@@ -102,6 +127,13 @@ const crawlerIndex = new Crawler({
           : 0
         data.prevHalfHit = `${data.prevHalfHit}(${data.nextHalfGoal})`
         data.is21 = `${data.is21}(${data.is21NextHalfGoal})`
+        data.lt40gt45Precent = data.lt40gt45noScoreCount
+          ? (
+              (data.lt40gt45nextHalfGoal / data.lt40gt45noScoreCount) *
+              100
+            ).toFixed(2) + '%'
+          : 0
+        data.lt40gt45noScoreCount = `${data.lt40gt45noScoreCount}(${data.lt40gt45nextHalfGoal})`
       }
     }
     arr.push(data)

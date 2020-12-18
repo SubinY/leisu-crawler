@@ -73,6 +73,33 @@ const columns = [
     field: 'threeScore21',
     name: '3球或以上场次',
     type: 'string'
+  },
+  {
+    field: 'lt40gt45noScoreCount',
+    name: '40分钟前没进球比赛(下半场有球)',
+    type: 'string',
+    width: 40
+  },
+  {
+    field: 'lt40gt45Precent',
+    name: '40分钟前没进球下半有球概率',
+    type: 'string',
+    width: 40
+  },
+  {
+    field: 'oneScorelt40gt45',
+    name: '1球场次',
+    type: 'string'
+  },
+  {
+    field: 'twoScorelt40gt45',
+    name: '2球场次',
+    type: 'string'
+  },
+  {
+    field: 'threeScorelt40gt45',
+    name: '3球或以上场次',
+    type: 'string'
   }
   // {
   //   field: is3up,
@@ -93,7 +120,7 @@ function excelHandle(datas) {
     excelConf.cols.push({
       caption: column['name'],
       type: column['type'], // 数据类型
-      width: 25
+      width: column['width'] || 25
     })
   }
   // 内容
@@ -116,7 +143,12 @@ function excelHandle(datas) {
       threeScore,
       oneScore21,
       twoScore21,
-      threeScore21
+      threeScore21,
+      lt40gt45noScoreCount,
+      lt40gt45Precent,
+      oneScorelt40gt45,
+      twoScorelt40gt45,
+      threeScorelt40gt45
     } = item
     excelConf.rows.push([
       date,
@@ -132,7 +164,12 @@ function excelHandle(datas) {
       is21,
       oneScore21,
       twoScore21,
-      threeScore21
+      threeScore21,
+      lt40gt45noScoreCount,
+      lt40gt45Precent,
+      oneScorelt40gt45,
+      twoScorelt40gt45,
+      threeScorelt40gt45
     ])
   })
   // 调用excelPort的方法，生成最终的数据
